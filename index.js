@@ -310,7 +310,7 @@ module.exports = function(app) {
     const normalizedKey = snakeToCamel(key);
     
     // Debug logging (remove in production)
-    if (normalizedKey === 'stationPressure' || normalizedKey === 'windDirection' || normalizedKey === 'battery' || normalizedKey === 'airDensity') {
+    if (['stationPressure', 'windDirection', 'battery', 'airDensity', 'windAvg', 'windGust', 'windLull', 'solarRadiation', 'illuminance'].includes(normalizedKey)) {
       app.debug(`Converting ${key} -> ${normalizedKey}, value: ${value}`);
     }
     
