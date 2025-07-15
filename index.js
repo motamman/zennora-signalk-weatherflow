@@ -280,11 +280,9 @@ module.exports = function(app) {
     const converted = convertToSignalKUnits(key, value);
     const camelKey = snakeToCamel(key);
     
-    // Debug logging for units metadata
-    if (converted.units) {
-      app.debug(`Adding units metadata: ${key} -> ${camelKey}, units: ${converted.units}`);
-    } else {
-      app.debug(`No units for: ${key} -> ${camelKey}`);
+    // Log missing units for debugging
+    if (!converted.units && !['type', 'source', 'id', 'statusCode', 'statusMessage', 'hubSn', 'serialNumber', 'pressureTrend', 'deviceId', 'firmwareRevision', 'precipitationType', 'precipType', 'lightningStrikeCount', 'strikeCount1h', 'strikeCount3h', 'precipitationAnalysisType', 'precipAnalysisTypeYesterday', 'uvIndex'].includes(camelKey)) {
+      app.debug(`[MISSING UNITS] ${key} -> ${camelKey} has no units metadata`);
     }
     
     const delta = {
@@ -316,10 +314,8 @@ module.exports = function(app) {
     // Normalize key to camelCase for consistent matching
     const normalizedKey = snakeToCamel(key);
     
-    // Debug logging (remove in production)
-    if (['stationPressure', 'windDirection', 'battery', 'airDensity', 'windAvg', 'windGust', 'windLull', 'solarRadiation', 'illuminance', 'dewPoint', 'feelsLike', 'wetBulbTemperature', 'wetBulbGlobeTemperature'].includes(normalizedKey)) {
-      app.debug(`Converting ${key} -> ${normalizedKey}, value: ${value}`);
-    }
+    // Debug key conversion
+    app.debug(`Converting field: ${key} -> ${normalizedKey}`);
     
     switch (normalizedKey) {
       // Temperature conversions: °C to K
@@ -424,10 +420,6 @@ module.exports = function(app) {
         return { value: value, units: null };
       
       default:
-        // Debug logging for unmatched fields
-        if (!['type', 'source', 'id', 'statusCode', 'statusMessage', 'hubSn', 'serialNumber', 'pressureTrend'].includes(normalizedKey)) {
-          app.debug(`Unmatched field in unit conversion: ${key} -> ${normalizedKey}`);
-        }
         return { value: value, units: null };
     }
   }
