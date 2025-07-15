@@ -270,9 +270,15 @@ module.exports = function(app) {
     }
   }
 
+  // Helper function to convert snake_case to camelCase
+  function snakeToCamel(str) {
+    return str.replace(/_([a-z])/g, (match, letter) => letter.toUpperCase());
+  }
+
   // Helper function to send individual SignalK deltas with units metadata
   function sendSignalKDelta(basePath, key, value, source, timestamp) {
     const converted = convertToSignalKUnits(key, value);
+    const camelKey = snakeToCamel(key);
     
     const delta = {
       context: 'vessels.self',
@@ -280,7 +286,7 @@ module.exports = function(app) {
         $source: source,
         timestamp: timestamp,
         values: [{
-          path: `${basePath}.${key}`,
+          path: `${basePath}.${camelKey}`,
           value: converted.value
         }]
       }]
@@ -303,6 +309,7 @@ module.exports = function(app) {
     switch (key) {
       // Temperature conversions: °C to K
       case 'airTemperature':
+      case 'air_temperature':
       case 'feels_like':
       case 'heat_index':
       case 'wind_chill':
@@ -313,10 +320,13 @@ module.exports = function(app) {
       
       // Pressure conversions: MB to Pa
       case 'stationPressure':
+      case 'station_pressure':
+      case 'pressure':
         return { value: value * 100, units: 'Pa' };
       
       // Direction conversions: degrees to radians
       case 'windDirection':
+      case 'wind_direction':
         return { value: value * (Math.PI / 180), units: 'rad' };
       
       // Distance conversions: km to m
@@ -326,13 +336,18 @@ module.exports = function(app) {
       
       // Time conversions: minutes to seconds
       case 'reportInterval':
+      case 'report_interval':
         return { value: value * 60, units: 's' };
       
       // Rain conversions: mm to m
       case 'rainAccumulated':
+      case 'rain_accumulated':
       case 'rainAccumulatedFinal':
+      case 'rain_accumulated_final':
       case 'localDailyRainAccumulation':
+      case 'local_daily_rain_accumulation':
       case 'localDailyRainAccumulationFinal':
+      case 'local_daily_rain_accumulation_final':
       case 'precip_total_1h':
       case 'precip_accum_local_yesterday':
       case 'precip_accum_local_yesterday_final':
@@ -340,6 +355,7 @@ module.exports = function(app) {
       
       // Relative humidity: % to ratio (0-1)
       case 'relativeHumidity':
+      case 'relative_humidity':
         return { value: value / 100, units: 'ratio' };
       
       // Wind speeds (already in m/s)
@@ -347,11 +363,17 @@ module.exports = function(app) {
       case 'windAvg':
       case 'windGust':
       case 'windSpeed':
+      case 'wind_lull':
+      case 'wind_avg':
+      case 'wind_gust':
+      case 'wind_speed':
         return { value: value, units: 'm/s' };
       
       // Time values (already in seconds)
       case 'windSampleInterval':
+      case 'wind_sample_interval':
       case 'timeEpoch':
+      case 'time_epoch':
       case 'strike_last_epoch':
       case 'precip_minutes_local_day':
       case 'precip_minutes_local_yesterday':
@@ -363,6 +385,7 @@ module.exports = function(app) {
       
       // Solar radiation (W/m²)
       case 'solarRadiation':
+      case 'solar_radiation':
         return { value: value, units: 'W/m2' };
       
       // Battery voltage
@@ -379,11 +402,16 @@ module.exports = function(app) {
       
       // Counts and indices (dimensionless)
       case 'uvIndex':
+      case 'uv_index':
       case 'precipitationType':
+      case 'precipitation_type':
+      case 'precip_type':
       case 'lightningStrikeCount':
+      case 'lightning_strike_count':
       case 'strike_count_1h':
       case 'strike_count_3h':
       case 'precipitationAnalysisType':
+      case 'precipitation_analysis_type':
       case 'device_id':
       case 'firmware_revision':
       case 'precip_analysis_type_yesterday':
@@ -421,23 +449,23 @@ module.exports = function(app) {
         windLull: obsArray[1],
         windAvg: obsArray[2],
         windGust: obsArray[3],
-        windDirection: obsArray[4],
+        windDirection: obsArray[4], // Will be converted to radians by convertToSignalKUnits
         windSampleInterval: obsArray[5],
-        stationPressure: obsArray[6] * 100, // MB to Pa
-        airTemperature: obsArray[7] + 273.15, // °C to K
-        relativeHumidity: obsArray[8],
+        stationPressure: obsArray[6], // Will be converted to Pa by convertToSignalKUnits
+        airTemperature: obsArray[7], // Will be converted to K by convertToSignalKUnits
+        relativeHumidity: obsArray[8], // Will be converted to ratio by convertToSignalKUnits
         illuminance: obsArray[9],
         uvIndex: obsArray[10],
         solarRadiation: obsArray[11],
-        rainAccumulated: obsArray[12],
+        rainAccumulated: obsArray[12], // Will be converted to m by convertToSignalKUnits
         precipitationType: obsArray[13],
-        lightningStrikeAvgDistance: obsArray[14] * 1000, // km to m
+        lightningStrikeAvgDistance: obsArray[14], // Will be converted to m by convertToSignalKUnits
         lightningStrikeCount: obsArray[15],
         battery: obsArray[16],
-        reportInterval: obsArray[17] * 60, // min to sec
-        localDailyRainAccumulation: obsArray[18],
-        rainAccumulatedFinal: obsArray[19],
-        localDailyRainAccumulationFinal: obsArray[20],
+        reportInterval: obsArray[17], // Will be converted to sec by convertToSignalKUnits
+        localDailyRainAccumulation: obsArray[18], // Will be converted to m by convertToSignalKUnits
+        rainAccumulatedFinal: obsArray[19], // Will be converted to m by convertToSignalKUnits
+        localDailyRainAccumulationFinal: obsArray[20], // Will be converted to m by convertToSignalKUnits
         precipitationAnalysisType: obsArray[21]
       };
       
