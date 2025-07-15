@@ -315,13 +315,28 @@ module.exports = function(app) {
       delete data.obs;
     }
     
-    // Send to SignalK
-    const delta = createSignalKDelta(
-      'environment.outside.tempest.observations',
-      data,
-      'zennora-weatherflow-ws'
-    );
-    app.handleMessage(plugin.id, delta);
+    // Send individual deltas for each observation value
+    const timestamp = data.utcDate || new Date().toISOString();
+    const source = 'zennora-weatherflow-ws';
+    
+    // Create individual deltas for each observation property
+    Object.entries(data).forEach(([key, value]) => {
+      if (key === 'utcDate') return; // Skip timestamp, use it for deltas
+      
+      const delta = {
+        context: 'vessels.self',
+        updates: [{
+          $source: source,
+          timestamp: timestamp,
+          values: [{
+            path: `environment.outside.tempest.observations.${key}`,
+            value: value
+          }]
+        }]
+      };
+      
+      app.handleMessage(plugin.id, delta);
+    });
   }
 
   // Process rapid wind observations
@@ -336,12 +351,27 @@ module.exports = function(app) {
       utcDate: new Date(timeEpoch * 1000).toISOString()
     };
     
-    const delta = createSignalKDelta(
-      'environment.outside.rapidWind',
-      windData,
-      'zennora-weatherflow-udp'
-    );
-    app.handleMessage(plugin.id, delta);
+    // Send individual deltas for each wind observation
+    const timestamp = windData.utcDate;
+    const source = 'zennora-weatherflow-udp';
+    
+    Object.entries(windData).forEach(([key, value]) => {
+      if (key === 'utcDate') return; // Skip timestamp
+      
+      const delta = {
+        context: 'vessels.self',
+        updates: [{
+          $source: source,
+          timestamp: timestamp,
+          values: [{
+            path: `environment.outside.rapidWind.${key}`,
+            value: value
+          }]
+        }]
+      };
+      
+      app.handleMessage(plugin.id, delta);
+    });
     
     // Calculate wind values if enabled
     if (options.enableWindCalculations && windCalculations) {
@@ -402,12 +432,27 @@ module.exports = function(app) {
       utcDate: new Date(obs[0] * 1000).toISOString()
     };
     
-    const delta = createSignalKDelta(
-      'environment.outside.tempest.observations',
-      observationData,
-      'zennora-weatherflow-udp'
-    );
-    app.handleMessage(plugin.id, delta);
+    // Send individual deltas for each tempest observation
+    const timestamp = observationData.utcDate;
+    const source = 'zennora-weatherflow-udp';
+    
+    Object.entries(observationData).forEach(([key, value]) => {
+      if (key === 'utcDate') return; // Skip timestamp
+      
+      const delta = {
+        context: 'vessels.self',
+        updates: [{
+          $source: source,
+          timestamp: timestamp,
+          values: [{
+            path: `environment.outside.tempest.observations.${key}`,
+            value: value
+          }]
+        }]
+      };
+      
+      app.handleMessage(plugin.id, delta);
+    });
     
     // Calculate wind values if enabled
     if (options.enableWindCalculations && windCalculations) {
@@ -436,12 +481,27 @@ module.exports = function(app) {
       utcDate: new Date(obs[0] * 1000).toISOString()
     };
     
-    const delta = createSignalKDelta(
-      'environment.inside.air.observations',
-      observationData,
-      'zennora-weatherflow-udp'
-    );
-    app.handleMessage(plugin.id, delta);
+    // Send individual deltas for each air observation
+    const timestamp = observationData.utcDate;
+    const source = 'zennora-weatherflow-udp';
+    
+    Object.entries(observationData).forEach(([key, value]) => {
+      if (key === 'utcDate') return; // Skip timestamp
+      
+      const delta = {
+        context: 'vessels.self',
+        updates: [{
+          $source: source,
+          timestamp: timestamp,
+          values: [{
+            path: `environment.inside.air.observations.${key}`,
+            value: value
+          }]
+        }]
+      };
+      
+      app.handleMessage(plugin.id, delta);
+    });
   }
 
   // Process rain events
@@ -454,12 +514,27 @@ module.exports = function(app) {
       utcDate: new Date(timeEpoch * 1000).toISOString()
     };
     
-    const delta = createSignalKDelta(
-      'environment.outside.rain.observations',
-      rainData,
-      'zennora-weatherflow-udp'
-    );
-    app.handleMessage(plugin.id, delta);
+    // Send individual deltas for each rain observation
+    const timestamp = rainData.utcDate;
+    const source = 'zennora-weatherflow-udp';
+    
+    Object.entries(rainData).forEach(([key, value]) => {
+      if (key === 'utcDate') return; // Skip timestamp
+      
+      const delta = {
+        context: 'vessels.self',
+        updates: [{
+          $source: source,
+          timestamp: timestamp,
+          values: [{
+            path: `environment.outside.rain.observations.${key}`,
+            value: value
+          }]
+        }]
+      };
+      
+      app.handleMessage(plugin.id, delta);
+    });
   }
 
   // Process lightning events
@@ -474,12 +549,27 @@ module.exports = function(app) {
       utcDate: new Date(timeEpoch * 1000).toISOString()
     };
     
-    const delta = createSignalKDelta(
-      'environment.outside.lightning.observations',
-      lightningData,
-      'zennora-weatherflow-udp'
-    );
-    app.handleMessage(plugin.id, delta);
+    // Send individual deltas for each lightning observation
+    const timestamp = lightningData.utcDate;
+    const source = 'zennora-weatherflow-udp';
+    
+    Object.entries(lightningData).forEach(([key, value]) => {
+      if (key === 'utcDate') return; // Skip timestamp
+      
+      const delta = {
+        context: 'vessels.self',
+        updates: [{
+          $source: source,
+          timestamp: timestamp,
+          values: [{
+            path: `environment.outside.lightning.observations.${key}`,
+            value: value
+          }]
+        }]
+      };
+      
+      app.handleMessage(plugin.id, delta);
+    });
   }
 
   // Process forecast data
