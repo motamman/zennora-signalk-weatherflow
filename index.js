@@ -306,56 +306,50 @@ module.exports = function(app) {
   function convertToSignalKUnits(key, value) {
     if (value === null || value === undefined) return { value, units: null };
     
-    switch (key) {
+    // Normalize key to camelCase for consistent matching
+    const normalizedKey = snakeToCamel(key);
+    
+    switch (normalizedKey) {
       // Temperature conversions: °C to K
       case 'airTemperature':
-      case 'air_temperature':
-      case 'feels_like':
-      case 'heat_index':
-      case 'wind_chill':
-      case 'dew_point':
-      case 'wet_bulb_temperature':
-      case 'wet_bulb_globe_temperature':
+      case 'feelsLike':
+      case 'heatIndex':
+      case 'windChill':
+      case 'dewPoint':
+      case 'wetBulbTemperature':
+      case 'wetBulbGlobeTemperature':
         return { value: value + 273.15, units: 'K' };
       
       // Pressure conversions: MB to Pa
       case 'stationPressure':
-      case 'station_pressure':
       case 'pressure':
         return { value: value * 100, units: 'Pa' };
       
       // Direction conversions: degrees to radians
       case 'windDirection':
-      case 'wind_direction':
         return { value: value * (Math.PI / 180), units: 'rad' };
       
       // Distance conversions: km to m
       case 'lightningStrikeAvgDistance':
-      case 'strike_last_dist':
+      case 'strikeLastDist':
         return { value: value * 1000, units: 'm' };
       
       // Time conversions: minutes to seconds
       case 'reportInterval':
-      case 'report_interval':
         return { value: value * 60, units: 's' };
       
       // Rain conversions: mm to m
       case 'rainAccumulated':
-      case 'rain_accumulated':
       case 'rainAccumulatedFinal':
-      case 'rain_accumulated_final':
       case 'localDailyRainAccumulation':
-      case 'local_daily_rain_accumulation':
       case 'localDailyRainAccumulationFinal':
-      case 'local_daily_rain_accumulation_final':
-      case 'precip_total_1h':
-      case 'precip_accum_local_yesterday':
-      case 'precip_accum_local_yesterday_final':
+      case 'precipTotal1h':
+      case 'precipAccumLocalYesterday':
+      case 'precipAccumLocalYesterdayFinal':
         return { value: value / 1000, units: 'm' };
       
       // Relative humidity: % to ratio (0-1)
       case 'relativeHumidity':
-      case 'relative_humidity':
         return { value: value / 100, units: 'ratio' };
       
       // Wind speeds (already in m/s)
@@ -363,20 +357,14 @@ module.exports = function(app) {
       case 'windAvg':
       case 'windGust':
       case 'windSpeed':
-      case 'wind_lull':
-      case 'wind_avg':
-      case 'wind_gust':
-      case 'wind_speed':
         return { value: value, units: 'm/s' };
       
       // Time values (already in seconds)
       case 'windSampleInterval':
-      case 'wind_sample_interval':
       case 'timeEpoch':
-      case 'time_epoch':
-      case 'strike_last_epoch':
-      case 'precip_minutes_local_day':
-      case 'precip_minutes_local_yesterday':
+      case 'strikeLastEpoch':
+      case 'precipMinutesLocalDay':
+      case 'precipMinutesLocalYesterday':
         return { value: value, units: 's' };
       
       // Illuminance (lux)
@@ -385,7 +373,6 @@ module.exports = function(app) {
       
       // Solar radiation (W/m²)
       case 'solarRadiation':
-      case 'solar_radiation':
         return { value: value, units: 'W/m2' };
       
       // Battery voltage
@@ -393,34 +380,30 @@ module.exports = function(app) {
         return { value: value, units: 'V' };
       
       // Air density (kg/m³)
-      case 'air_density':
+      case 'airDensity':
         return { value: value, units: 'kg/m3' };
       
       // Temperature difference
-      case 'delta_t':
+      case 'deltaT':
         return { value: value, units: 'K' };
       
       // Counts and indices (dimensionless)
       case 'uvIndex':
-      case 'uv_index':
       case 'precipitationType':
-      case 'precipitation_type':
-      case 'precip_type':
+      case 'precipType':
       case 'lightningStrikeCount':
-      case 'lightning_strike_count':
-      case 'strike_count_1h':
-      case 'strike_count_3h':
+      case 'strikeCount1h':
+      case 'strikeCount3h':
       case 'precipitationAnalysisType':
-      case 'precipitation_analysis_type':
-      case 'device_id':
-      case 'firmware_revision':
-      case 'precip_analysis_type_yesterday':
+      case 'deviceId':
+      case 'firmwareRevision':
+      case 'precipAnalysisTypeYesterday':
         return { value: value, units: null };
       
       // String values (no units)
-      case 'serial_number':
-      case 'hub_sn':
-      case 'pressure_trend':
+      case 'serialNumber':
+      case 'hubSn':
+      case 'pressureTrend':
         return { value: value, units: null };
       
       default:
