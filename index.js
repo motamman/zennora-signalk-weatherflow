@@ -280,10 +280,7 @@ module.exports = function(app) {
     const converted = convertToSignalKUnits(key, value);
     const camelKey = snakeToCamel(key);
     
-    // Log missing units for debugging
-    if (!converted.units && !['type', 'source', 'id', 'statusCode', 'statusMessage', 'hubSn', 'serialNumber', 'pressureTrend', 'deviceId', 'firmwareRevision', 'precipitationType', 'precipType', 'lightningStrikeCount', 'strikeCount1h', 'strikeCount3h', 'precipitationAnalysisType', 'precipAnalysisTypeYesterday', 'uvIndex'].includes(camelKey)) {
-      app.debug(`[MISSING UNITS] ${key} -> ${camelKey} has no units metadata`);
-    }
+    const path = `${basePath}.${camelKey}`;
     
     const delta = {
       context: 'vessels.self',
@@ -291,7 +288,7 @@ module.exports = function(app) {
         $source: source,
         timestamp: timestamp,
         values: [{
-          path: `${basePath}.${camelKey}`,
+          path: path,
           value: converted.value
         }]
       }]
@@ -299,9 +296,12 @@ module.exports = function(app) {
     
     // Add units metadata if available
     if (converted.units) {
-      delta.updates[0].values[0].meta = {
-        units: converted.units
-      };
+      delta.updates[0].meta = [{
+        path: path,
+        value: {
+          units: converted.units
+        }
+      }];
     }
     
     app.handleMessage(plugin.id, delta);
@@ -314,8 +314,6 @@ module.exports = function(app) {
     // Normalize key to camelCase for consistent matching
     const normalizedKey = snakeToCamel(key);
     
-    // Debug key conversion
-    app.debug(`Converting field: ${key} -> ${normalizedKey}`);
     
     switch (normalizedKey) {
       // Temperature conversions: °C to K
