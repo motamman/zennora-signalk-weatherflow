@@ -1,13 +1,14 @@
 # Zennora WeatherFlow Ingester
 
-This SignalK plugin integrates WeatherFlow weather station data into your SignalK server, providing real-time weather observations, forecasts, and calculated wind data.
+This SignalK plugin integrates WeatherFlow weather station, in particular the Tempest, data into your SignalK server, providing real-time weather observations, forecasts, and calculated wind data.
+
 
 ## Features
 
-- **UDP Data Ingestion**: Receives real-time weather data from WeatherFlow stations via UDP broadcasts
+- **UDP Data Ingestion**: Receives real-time weather data from stations via UDP broadcasts
 - **WebSocket Connection**: Connects to WeatherFlow WebSocket API for additional real-time data
 - **API Integration**: Fetches forecast data from WeatherFlow REST API
-- **Wind Calculations**: Calculates true wind, apparent wind, wind chill, heat index, and feels-like temperature
+- **Wind Calculations**: Calculates true wind, apparent wind, and wind chill (with Tempest) and heat index, and feels-like temperature
 - **Unit Conversions**: Automatically converts units to SignalK standards (Kelvin, Pascals, radians, etc.)
 - **Multiple Data Sources**: Supports Tempest, Air, and legacy WeatherFlow devices
 
@@ -15,6 +16,7 @@ This SignalK plugin integrates WeatherFlow weather station data into your Signal
 
 1. Install the plugin in your SignalK server:
    ```bash
+   cd ~/,signalk/node_modules/
    npm install motamman/zennora-signalk-weatherflow
    ```
 
