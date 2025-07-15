@@ -280,6 +280,13 @@ module.exports = function(app) {
     const converted = convertToSignalKUnits(key, value);
     const camelKey = snakeToCamel(key);
     
+    // Debug logging for units metadata
+    if (converted.units) {
+      app.debug(`Adding units metadata: ${key} -> ${camelKey}, units: ${converted.units}`);
+    } else {
+      app.debug(`No units for: ${key} -> ${camelKey}`);
+    }
+    
     const delta = {
       context: 'vessels.self',
       updates: [{
