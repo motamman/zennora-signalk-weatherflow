@@ -1,6 +1,6 @@
 {
   "name": "zennora-signalk-weatherflow",
-  "version": "1.0.0",
+  "version": "0.5.alpha1",
   "description": "SignalK plugin for WeatherFlow weather station data ingestion",
   "main": "index.js",
   "appicon": "zennora.png",
@@ -13,7 +13,6 @@
   "author": "Maurice Tamman",
   "license": "MIT",
   "dependencies": {
-    "dgram": "^1.0.1",
     "ws": "^8.14.2",
     "node-fetch": "^2.7.0"
   },
