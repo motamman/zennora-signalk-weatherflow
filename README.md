@@ -15,7 +15,7 @@ This SignalK plugin integrates WeatherFlow weather station data into your Signal
 
 1. Install the plugin in your SignalK server:
    ```bash
-   npm install signalk-weatherflow-plugin
+   npm install motamman/zennora-signalk-weatherflow
    ```
 
 2. Restart your SignalK server
