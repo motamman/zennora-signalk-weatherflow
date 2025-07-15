@@ -69,14 +69,19 @@ The plugin publishes data to the following SignalK paths:
 
 ## Data Types and Units
 
-All data is converted to SignalK standard units:
+All data is automatically converted to SignalK standard units:
 
-- **Temperature**: Kelvin (K)
-- **Pressure**: Pascals (Pa)
-- **Wind Direction**: Radians (rad)
-- **Wind Speed**: Meters per second (m/s)
-- **Distance**: Meters (m)
-- **Time**: Seconds (s)
+- **Temperature**: Celsius → Kelvin (K)
+- **Pressure**: Millibars → Pascals (Pa)
+- **Wind Direction**: Degrees → Radians (rad)
+- **Wind Speed**: Meters per second (m/s) - no conversion needed
+- **Distance**: Kilometers → Meters (m)
+- **Time**: Minutes → Seconds (s)
+- **Rainfall**: Millimeters → Meters (m)
+- **Relative Humidity**: Percentage → Ratio (0-1)
+- **Battery**: Volts (V) - no conversion needed
+- **Illuminance**: Lux - no conversion needed
+- **Solar Radiation**: W/m² - no conversion needed
 
 ## Wind Calculations
 

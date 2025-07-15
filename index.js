@@ -270,6 +270,86 @@ module.exports = function(app) {
     }
   }
 
+  // Convert WeatherFlow values to SignalK standard units
+  function convertToSignalKUnits(key, value) {
+    if (value === null || value === undefined) return value;
+    
+    switch (key) {
+      // Temperature conversions: °C to K
+      case 'airTemperature':
+      case 'feels_like':
+      case 'heat_index':
+      case 'wind_chill':
+      case 'dew_point':
+      case 'wet_bulb_temperature':
+      case 'wet_bulb_globe_temperature':
+        return value + 273.15;
+      
+      // Pressure conversions: MB to Pa
+      case 'stationPressure':
+        return value * 100;
+      
+      // Direction conversions: degrees to radians
+      case 'windDirection':
+        return value * (Math.PI / 180);
+      
+      // Distance conversions: km to m
+      case 'lightningStrikeAvgDistance':
+      case 'strike_last_dist':
+        return value * 1000;
+      
+      // Time conversions: minutes to seconds
+      case 'reportInterval':
+        return value * 60;
+      
+      // Rain conversions: mm to m
+      case 'rainAccumulated':
+      case 'rainAccumulatedFinal':
+      case 'localDailyRainAccumulation':
+      case 'localDailyRainAccumulationFinal':
+      case 'precip_total_1h':
+      case 'precip_accum_local_yesterday':
+      case 'precip_accum_local_yesterday_final':
+        return value / 1000;
+      
+      // Relative humidity: % to ratio (0-1)
+      case 'relativeHumidity':
+        return value / 100;
+      
+      // Keep as-is (already in SignalK units)
+      case 'windLull':
+      case 'windAvg':
+      case 'windGust':
+      case 'windSpeed':
+      case 'windSampleInterval':
+      case 'illuminance':
+      case 'uvIndex':
+      case 'solarRadiation':
+      case 'precipitationType':
+      case 'lightningStrikeCount':
+      case 'battery':
+      case 'timeEpoch':
+      case 'air_density':
+      case 'delta_t':
+      case 'precip_minutes_local_day':
+      case 'precip_minutes_local_yesterday':
+      case 'strike_count_1h':
+      case 'strike_count_3h':
+      case 'precipitationAnalysisType':
+      case 'device_id':
+      case 'serial_number':
+      case 'hub_sn':
+      case 'firmware_revision':
+      case 'pressure_trend':
+      case 'strike_last_epoch':
+      case 'precip_analysis_type_yesterday':
+        return value;
+      
+      default:
+        return value;
+    }
+  }
+
   // Process WebSocket messages
   function processWebSocketMessage(data) {
     // Flatten summary and status properties
@@ -323,6 +403,8 @@ module.exports = function(app) {
     Object.entries(data).forEach(([key, value]) => {
       if (key === 'utcDate') return; // Skip timestamp, use it for deltas
       
+      const convertedValue = convertToSignalKUnits(key, value);
+      
       const delta = {
         context: 'vessels.self',
         updates: [{
@@ -330,7 +412,7 @@ module.exports = function(app) {
           timestamp: timestamp,
           values: [{
             path: `environment.outside.tempest.observations.${key}`,
-            value: value
+            value: convertedValue
           }]
         }]
       };
@@ -347,7 +429,7 @@ module.exports = function(app) {
     const windData = {
       timeEpoch,
       windSpeed,
-      windDirection: windDirection * (Math.PI / 180), // Convert to radians
+      windDirection, // Will be converted to radians by convertToSignalKUnits
       utcDate: new Date(timeEpoch * 1000).toISOString()
     };
     
@@ -358,6 +440,8 @@ module.exports = function(app) {
     Object.entries(windData).forEach(([key, value]) => {
       if (key === 'utcDate') return; // Skip timestamp
       
+      const convertedValue = convertToSignalKUnits(key, value);
+      
       const delta = {
         context: 'vessels.self',
         updates: [{
@@ -365,7 +449,7 @@ module.exports = function(app) {
           timestamp: timestamp,
           values: [{
             path: `environment.outside.rapidWind.${key}`,
-            value: value
+            value: convertedValue
           }]
         }]
       };
@@ -411,23 +495,23 @@ module.exports = function(app) {
       windLull: obs[1],
       windAvg: obs[2],
       windGust: obs[3],
-      windDirection: obs[4] * (Math.PI / 180), // Convert to radians
+      windDirection: obs[4], // Will be converted to radians by convertToSignalKUnits
       windSampleInterval: obs[5],
-      stationPressure: obs[6] * 100, // MB to Pa
-      airTemperature: obs[7] + 273.15, // °C to K
-      relativeHumidity: obs[8],
+      stationPressure: obs[6], // Will be converted to Pa by convertToSignalKUnits
+      airTemperature: obs[7], // Will be converted to K by convertToSignalKUnits
+      relativeHumidity: obs[8], // Will be converted to ratio by convertToSignalKUnits
       illuminance: obs[9],
       uvIndex: obs[10],
       solarRadiation: obs[11],
-      rainAccumulated: obs[12],
+      rainAccumulated: obs[12], // Will be converted to m by convertToSignalKUnits
       precipitationType: obs[13],
-      lightningStrikeAvgDistance: obs[14] * 1000, // km to m
+      lightningStrikeAvgDistance: obs[14], // Will be converted to m by convertToSignalKUnits
       lightningStrikeCount: obs[15],
       battery: obs[16],
-      reportInterval: obs[17] * 60, // min to sec
-      localDailyRainAccumulation: obs[18],
-      rainAccumulatedFinal: obs[19],
-      localDailyRainAccumulationFinal: obs[20],
+      reportInterval: obs[17], // Will be converted to sec by convertToSignalKUnits
+      localDailyRainAccumulation: obs[18], // Will be converted to m by convertToSignalKUnits
+      rainAccumulatedFinal: obs[19], // Will be converted to m by convertToSignalKUnits
+      localDailyRainAccumulationFinal: obs[20], // Will be converted to m by convertToSignalKUnits
       precipitationAnalysisType: obs[21],
       utcDate: new Date(obs[0] * 1000).toISOString()
     };
@@ -439,6 +523,8 @@ module.exports = function(app) {
     Object.entries(observationData).forEach(([key, value]) => {
       if (key === 'utcDate') return; // Skip timestamp
       
+      const convertedValue = convertToSignalKUnits(key, value);
+      
       const delta = {
         context: 'vessels.self',
         updates: [{
@@ -446,7 +532,7 @@ module.exports = function(app) {
           timestamp: timestamp,
           values: [{
             path: `environment.outside.tempest.observations.${key}`,
-            value: value
+            value: convertedValue
           }]
         }]
       };
@@ -459,7 +545,7 @@ module.exports = function(app) {
       calculateAndPublishWind({
         windSpeed: obs[2], // windAvg
         windDirection: obs[4], // windDirection in degrees
-        airTemperature: obs[7] + 273.15 // airTemperature in K
+        airTemperature: obs[7] // airTemperature in °C (will be converted in wind calculations)
       });
     }
   }
@@ -471,13 +557,13 @@ module.exports = function(app) {
     const obs = data.obs[0];
     const observationData = {
       timeEpoch: obs[0],
-      stationPressure: obs[1] * 100, // MB to Pa
-      airTemperature: obs[2] + 273.15, // °C to K
-      relativeHumidity: obs[3],
+      stationPressure: obs[1], // Will be converted to Pa by convertToSignalKUnits
+      airTemperature: obs[2], // Will be converted to K by convertToSignalKUnits
+      relativeHumidity: obs[3], // Will be converted to ratio by convertToSignalKUnits
       lightningStrikeCount: obs[4],
-      lightningStrikeAvgDistance: obs[5] * 1000, // km to m
+      lightningStrikeAvgDistance: obs[5], // Will be converted to m by convertToSignalKUnits
       battery: obs[6],
-      reportInterval: obs[7] * 60, // min to sec
+      reportInterval: obs[7], // Will be converted to sec by convertToSignalKUnits
       utcDate: new Date(obs[0] * 1000).toISOString()
     };
     
@@ -488,6 +574,8 @@ module.exports = function(app) {
     Object.entries(observationData).forEach(([key, value]) => {
       if (key === 'utcDate') return; // Skip timestamp
       
+      const convertedValue = convertToSignalKUnits(key, value);
+      
       const delta = {
         context: 'vessels.self',
         updates: [{
@@ -495,7 +583,7 @@ module.exports = function(app) {
           timestamp: timestamp,
           values: [{
             path: `environment.inside.air.observations.${key}`,
-            value: value
+            value: convertedValue
           }]
         }]
       };
@@ -521,6 +609,8 @@ module.exports = function(app) {
     Object.entries(rainData).forEach(([key, value]) => {
       if (key === 'utcDate') return; // Skip timestamp
       
+      const convertedValue = convertToSignalKUnits(key, value);
+      
       const delta = {
         context: 'vessels.self',
         updates: [{
@@ -528,7 +618,7 @@ module.exports = function(app) {
           timestamp: timestamp,
           values: [{
             path: `environment.outside.rain.observations.${key}`,
-            value: value
+            value: convertedValue
           }]
         }]
       };
@@ -544,7 +634,7 @@ module.exports = function(app) {
     const [timeEpoch, distance, energy] = data.evt;
     const lightningData = {
       timeEpoch,
-      distance: distance * 1000, // km to m
+      lightningStrikeAvgDistance: distance, // Will be converted to m by convertToSignalKUnits
       energy,
       utcDate: new Date(timeEpoch * 1000).toISOString()
     };
@@ -556,6 +646,8 @@ module.exports = function(app) {
     Object.entries(lightningData).forEach(([key, value]) => {
       if (key === 'utcDate') return; // Skip timestamp
       
+      const convertedValue = convertToSignalKUnits(key, value);
+      
       const delta = {
         context: 'vessels.self',
         updates: [{
@@ -563,7 +655,7 @@ module.exports = function(app) {
           timestamp: timestamp,
           values: [{
             path: `environment.outside.lightning.observations.${key}`,
-            value: value
+            value: convertedValue
           }]
         }]
       };
