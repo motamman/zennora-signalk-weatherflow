@@ -272,7 +272,7 @@ module.exports = function(app) {
 
   // Helper function to convert snake_case to camelCase
   function snakeToCamel(str) {
-    return str.replace(/_([a-z])/g, (match, letter) => letter.toUpperCase());
+    return str.replace(/_([a-z0-9])/g, (match, letter) => letter.toUpperCase());
   }
 
   // Helper function to send individual SignalK deltas with units metadata
@@ -383,7 +383,7 @@ module.exports = function(app) {
       case 'airDensity':
         return { value: value, units: 'kg/m3' };
       
-      // Temperature difference
+      // Temperature difference (already in K)
       case 'deltaT':
         return { value: value, units: 'K' };
       
@@ -398,6 +398,11 @@ module.exports = function(app) {
       case 'deviceId':
       case 'firmwareRevision':
       case 'precipAnalysisTypeYesterday':
+      case 'type':
+      case 'source':
+      case 'statusCode':
+      case 'statusMessage':
+      case 'id':
         return { value: value, units: null };
       
       // String values (no units)
