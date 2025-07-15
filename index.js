@@ -76,6 +76,7 @@ module.exports = function(app) {
   // Plugin start function
   plugin.start = function(options, restartPlugin) {
     app.debug('Starting WeatherFlow plugin with options:', options);
+    app.setProviderStatus('Initializing WeatherFlow plugin...');
     
     // Initialize wind calculations if enabled
     if (options.enableWindCalculations) {
@@ -99,6 +100,7 @@ module.exports = function(app) {
     }
     
     app.debug('WeatherFlow plugin started successfully');
+    app.setProviderStatus('WeatherFlow plugin running');
   };
 
   // Plugin stop function
@@ -150,12 +152,16 @@ module.exports = function(app) {
     ];
     
     subscriptions.forEach(path => {
-      const unsubscribe = app.streambundle.getSelfStream(path).onValue(value => {
-        if (value && value.value !== undefined) {
-          windCalculations.updateNavigationData(path, value.value);
-        }
-      });
-      navigationSubscriptions.push(unsubscribe);
+      try {
+        const unsubscribe = app.streambundle.getSelfStream(path).onValue(value => {
+          if (value && value.value !== undefined) {
+            windCalculations.updateNavigationData(path, value.value);
+          }
+        });
+        navigationSubscriptions.push(unsubscribe);
+      } catch (error) {
+        app.debug(`Error setting up subscription for ${path}:`, error);
+      }
     });
   }
 

@@ -5,6 +5,7 @@
   "main": "index.js",
   "appicon": "zennora.png",
   "keywords": [
+    "signalk-node-server-plugin",
     "zennora-signalk-weatherflow",
     "weatherflow",
     "weather",
