@@ -270,9 +270,35 @@ module.exports = function(app) {
     }
   }
 
-  // Convert WeatherFlow values to SignalK standard units
+  // Helper function to send individual SignalK deltas with units metadata
+  function sendSignalKDelta(basePath, key, value, source, timestamp) {
+    const converted = convertToSignalKUnits(key, value);
+    
+    const delta = {
+      context: 'vessels.self',
+      updates: [{
+        $source: source,
+        timestamp: timestamp,
+        values: [{
+          path: `${basePath}.${key}`,
+          value: converted.value
+        }]
+      }]
+    };
+    
+    // Add units metadata if available
+    if (converted.units) {
+      delta.updates[0].values[0].meta = {
+        units: converted.units
+      };
+    }
+    
+    app.handleMessage(plugin.id, delta);
+  }
+
+  // Convert WeatherFlow values to SignalK standard units and get units metadata
   function convertToSignalKUnits(key, value) {
-    if (value === null || value === undefined) return value;
+    if (value === null || value === undefined) return { value, units: null };
     
     switch (key) {
       // Temperature conversions: °C to K
@@ -283,24 +309,24 @@ module.exports = function(app) {
       case 'dew_point':
       case 'wet_bulb_temperature':
       case 'wet_bulb_globe_temperature':
-        return value + 273.15;
+        return { value: value + 273.15, units: 'K' };
       
       // Pressure conversions: MB to Pa
       case 'stationPressure':
-        return value * 100;
+        return { value: value * 100, units: 'Pa' };
       
       // Direction conversions: degrees to radians
       case 'windDirection':
-        return value * (Math.PI / 180);
+        return { value: value * (Math.PI / 180), units: 'rad' };
       
       // Distance conversions: km to m
       case 'lightningStrikeAvgDistance':
       case 'strike_last_dist':
-        return value * 1000;
+        return { value: value * 1000, units: 'm' };
       
       // Time conversions: minutes to seconds
       case 'reportInterval':
-        return value * 60;
+        return { value: value * 60, units: 's' };
       
       // Rain conversions: mm to m
       case 'rainAccumulated':
@@ -310,43 +336,67 @@ module.exports = function(app) {
       case 'precip_total_1h':
       case 'precip_accum_local_yesterday':
       case 'precip_accum_local_yesterday_final':
-        return value / 1000;
+        return { value: value / 1000, units: 'm' };
       
       // Relative humidity: % to ratio (0-1)
       case 'relativeHumidity':
-        return value / 100;
+        return { value: value / 100, units: 'ratio' };
       
-      // Keep as-is (already in SignalK units)
+      // Wind speeds (already in m/s)
       case 'windLull':
       case 'windAvg':
       case 'windGust':
       case 'windSpeed':
+        return { value: value, units: 'm/s' };
+      
+      // Time values (already in seconds)
       case 'windSampleInterval':
-      case 'illuminance':
-      case 'uvIndex':
-      case 'solarRadiation':
-      case 'precipitationType':
-      case 'lightningStrikeCount':
-      case 'battery':
       case 'timeEpoch':
-      case 'air_density':
-      case 'delta_t':
+      case 'strike_last_epoch':
       case 'precip_minutes_local_day':
       case 'precip_minutes_local_yesterday':
+        return { value: value, units: 's' };
+      
+      // Illuminance (lux)
+      case 'illuminance':
+        return { value: value, units: 'lux' };
+      
+      // Solar radiation (W/m²)
+      case 'solarRadiation':
+        return { value: value, units: 'W/m2' };
+      
+      // Battery voltage
+      case 'battery':
+        return { value: value, units: 'V' };
+      
+      // Air density (kg/m³)
+      case 'air_density':
+        return { value: value, units: 'kg/m3' };
+      
+      // Temperature difference
+      case 'delta_t':
+        return { value: value, units: 'K' };
+      
+      // Counts and indices (dimensionless)
+      case 'uvIndex':
+      case 'precipitationType':
+      case 'lightningStrikeCount':
       case 'strike_count_1h':
       case 'strike_count_3h':
       case 'precipitationAnalysisType':
       case 'device_id':
+      case 'firmware_revision':
+      case 'precip_analysis_type_yesterday':
+        return { value: value, units: null };
+      
+      // String values (no units)
       case 'serial_number':
       case 'hub_sn':
-      case 'firmware_revision':
       case 'pressure_trend':
-      case 'strike_last_epoch':
-      case 'precip_analysis_type_yesterday':
-        return value;
+        return { value: value, units: null };
       
       default:
-        return value;
+        return { value: value, units: null };
     }
   }
 
@@ -402,22 +452,7 @@ module.exports = function(app) {
     // Create individual deltas for each observation property
     Object.entries(data).forEach(([key, value]) => {
       if (key === 'utcDate') return; // Skip timestamp, use it for deltas
-      
-      const convertedValue = convertToSignalKUnits(key, value);
-      
-      const delta = {
-        context: 'vessels.self',
-        updates: [{
-          $source: source,
-          timestamp: timestamp,
-          values: [{
-            path: `environment.outside.tempest.observations.${key}`,
-            value: convertedValue
-          }]
-        }]
-      };
-      
-      app.handleMessage(plugin.id, delta);
+      sendSignalKDelta('environment.outside.tempest.observations', key, value, source, timestamp);
     });
   }
 
@@ -439,22 +474,7 @@ module.exports = function(app) {
     
     Object.entries(windData).forEach(([key, value]) => {
       if (key === 'utcDate') return; // Skip timestamp
-      
-      const convertedValue = convertToSignalKUnits(key, value);
-      
-      const delta = {
-        context: 'vessels.self',
-        updates: [{
-          $source: source,
-          timestamp: timestamp,
-          values: [{
-            path: `environment.outside.rapidWind.${key}`,
-            value: convertedValue
-          }]
-        }]
-      };
-      
-      app.handleMessage(plugin.id, delta);
+      sendSignalKDelta('environment.outside.rapidWind', key, value, source, timestamp);
     });
     
     // Calculate wind values if enabled
@@ -522,22 +542,7 @@ module.exports = function(app) {
     
     Object.entries(observationData).forEach(([key, value]) => {
       if (key === 'utcDate') return; // Skip timestamp
-      
-      const convertedValue = convertToSignalKUnits(key, value);
-      
-      const delta = {
-        context: 'vessels.self',
-        updates: [{
-          $source: source,
-          timestamp: timestamp,
-          values: [{
-            path: `environment.outside.tempest.observations.${key}`,
-            value: convertedValue
-          }]
-        }]
-      };
-      
-      app.handleMessage(plugin.id, delta);
+      sendSignalKDelta('environment.outside.tempest.observations', key, value, source, timestamp);
     });
     
     // Calculate wind values if enabled
@@ -573,22 +578,7 @@ module.exports = function(app) {
     
     Object.entries(observationData).forEach(([key, value]) => {
       if (key === 'utcDate') return; // Skip timestamp
-      
-      const convertedValue = convertToSignalKUnits(key, value);
-      
-      const delta = {
-        context: 'vessels.self',
-        updates: [{
-          $source: source,
-          timestamp: timestamp,
-          values: [{
-            path: `environment.inside.air.observations.${key}`,
-            value: convertedValue
-          }]
-        }]
-      };
-      
-      app.handleMessage(plugin.id, delta);
+      sendSignalKDelta('environment.inside.air.observations', key, value, source, timestamp);
     });
   }
 
@@ -608,22 +598,7 @@ module.exports = function(app) {
     
     Object.entries(rainData).forEach(([key, value]) => {
       if (key === 'utcDate') return; // Skip timestamp
-      
-      const convertedValue = convertToSignalKUnits(key, value);
-      
-      const delta = {
-        context: 'vessels.self',
-        updates: [{
-          $source: source,
-          timestamp: timestamp,
-          values: [{
-            path: `environment.outside.rain.observations.${key}`,
-            value: convertedValue
-          }]
-        }]
-      };
-      
-      app.handleMessage(plugin.id, delta);
+      sendSignalKDelta('environment.outside.rain.observations', key, value, source, timestamp);
     });
   }
 
@@ -645,22 +620,7 @@ module.exports = function(app) {
     
     Object.entries(lightningData).forEach(([key, value]) => {
       if (key === 'utcDate') return; // Skip timestamp
-      
-      const convertedValue = convertToSignalKUnits(key, value);
-      
-      const delta = {
-        context: 'vessels.self',
-        updates: [{
-          $source: source,
-          timestamp: timestamp,
-          values: [{
-            path: `environment.outside.lightning.observations.${key}`,
-            value: convertedValue
-          }]
-        }]
-      };
-      
-      app.handleMessage(plugin.id, delta);
+      sendSignalKDelta('environment.outside.lightning.observations', key, value, source, timestamp);
     });
   }
 
