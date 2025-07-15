@@ -14,7 +14,7 @@ module.exports = function(app) {
   
   // Plugin metadata
   plugin.id = 'zennora-signalk-weatherflow';
-  plugin.name = 'WeatherFlow Weather Station Plugin';
+  plugin.name = 'Zennora WeatherFlow Ingester';
   plugin.description = 'Ingests data from WeatherFlow weather stations via UDP, WebSocket, and API';
 
   // Configuration schema

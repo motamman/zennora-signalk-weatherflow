@@ -1,4 +1,4 @@
-# SignalK WeatherFlow Plugin
+# Zennora WeatherFlow Ingester
 
 This SignalK plugin integrates WeatherFlow weather station data into your SignalK server, providing real-time weather observations, forecasts, and calculated wind data.
 
@@ -128,10 +128,3 @@ For WebSocket and API features:
 
 MIT License
 
-## Contributing
-
-Contributions are welcome! Please submit pull requests or issues on the project repository.
-
-## Based On
-
-This plugin is based on a Node-RED flow and incorporates the comprehensive weather data processing and wind calculation logic from that implementation.
