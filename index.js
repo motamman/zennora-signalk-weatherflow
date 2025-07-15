@@ -319,7 +319,7 @@ module.exports = function(app) {
     const delta = createSignalKDelta(
       'environment.outside.tempest.observations',
       data,
-      'mqtt-weatherflow-ws'
+      'zennora-weatherflow-ws'
     );
     app.handleMessage(plugin.id, delta);
   }
@@ -339,7 +339,7 @@ module.exports = function(app) {
     const delta = createSignalKDelta(
       'environment.outside.rapidWind',
       windData,
-      'mqtt-weatherflow-udp'
+      'zennora-weatherflow-udp'
     );
     app.handleMessage(plugin.id, delta);
     
@@ -405,7 +405,7 @@ module.exports = function(app) {
     const delta = createSignalKDelta(
       'environment.outside.tempest.observations',
       observationData,
-      'mqtt-weatherflow-udp'
+      'zennora-weatherflow-udp'
     );
     app.handleMessage(plugin.id, delta);
     
@@ -439,7 +439,7 @@ module.exports = function(app) {
     const delta = createSignalKDelta(
       'environment.inside.air.observations',
       observationData,
-      'mqtt-weatherflow-udp'
+      'zennora-weatherflow-udp'
     );
     app.handleMessage(plugin.id, delta);
   }
@@ -457,7 +457,7 @@ module.exports = function(app) {
     const delta = createSignalKDelta(
       'environment.outside.rain.observations',
       rainData,
-      'mqtt-weatherflow-udp'
+      'zennora-weatherflow-udp'
     );
     app.handleMessage(plugin.id, delta);
   }
@@ -477,7 +477,7 @@ module.exports = function(app) {
     const delta = createSignalKDelta(
       'environment.outside.lightning.observations',
       lightningData,
-      'mqtt-weatherflow-udp'
+      'zennora-weatherflow-udp'
     );
     app.handleMessage(plugin.id, delta);
   }
@@ -489,7 +489,7 @@ module.exports = function(app) {
       const delta = createSignalKDelta(
         'environment.outside.tempest.observations',
         data.current_conditions,
-        'mqtt-weatherflow-api'
+        'zennora-weatherflow-api'
       );
       app.handleMessage(plugin.id, delta);
     }
@@ -522,7 +522,7 @@ module.exports = function(app) {
         const delta = createSignalKDelta(
           `environment.outside.tempest.forecast.hourly.${index}`,
           forecast,
-          'mqtt-weatherflow-api'
+          'zennora-weatherflow-api'
         );
         app.handleMessage(plugin.id, delta);
       });
@@ -553,7 +553,7 @@ module.exports = function(app) {
         const delta = createSignalKDelta(
           `environment.outside.tempest.forecast.daily.${index}`,
           forecast,
-          'mqtt-weatherflow-api'
+          'zennora-weatherflow-api'
         );
         app.handleMessage(plugin.id, delta);
       });
