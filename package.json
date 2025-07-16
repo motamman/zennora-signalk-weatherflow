@@ -6,6 +6,8 @@
   "appicon": "zennora.png",
   "keywords": [
     "signalk-node-server-plugin",
+    "signalk-category-weather",
+    "signalk-category-instruments",
     "zennora-signalk-weatherflow",
     "weatherflow",
     "weather",
@@ -23,5 +25,10 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/motamman/zennora-signalk-weatherflow.git"
+  },
+  "signalk": {
+    "appSupport": "none",
+    "compatibility": ">=2.13.0",
+    "displayName": "Zennora WeatherFlow Plugin"
   }
 }
